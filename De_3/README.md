@@ -1,172 +1,248 @@
 # README - Bài tập MATLAB
 
-File này tóm tắt nhanh các bài đã làm, mỗi bài dùng phương pháp gì, thông số nào cần chú ý và các hàm MATLAB quan trọng.
+File này tóm tắt các kiến thức chính cần chú ý trong 3 câu MATLAB: biến đổi Fourier, mã đường CMI và điều chế pha PM qua kênh AWGN.
 
 ---
 
-## Bài 1 - Tín hiệu và biến đổi Fourier
+## Câu 1 - Tín hiệu và biến đổi Fourier
 
-**Mục tiêu:** mô phỏng tín hiệu trong miền thời gian, biến đổi Fourier và vẽ phổ tần số.
+### Mục tiêu
 
-Tín hiệu:
+Mô phỏng tín hiệu trong miền thời gian và phân tích phổ tần số bằng FFT.
+
+### Tín hiệu sử dụng
 
 ```matlab
 x = cos(40*pi*t - pi) + 3*cos(30*pi*t);
 ```
 
-**Thông số cần quan tâm:**
+### Thông số cần chú ý
 
-- `Fs`: tần số lấy mẫu.
-- `T = 1/Fs`: chu kỳ lấy mẫu.
-- `t`: trục thời gian.
+- `fs = 1000`: tần số lấy mẫu.
+- `Ts = 1/fs`: chu kỳ lấy mẫu.
+- `T = 1`: thời gian mô phỏng.
+- `t = 0:Ts:T-Ts`: trục thời gian.
 - `N = length(x)`: số mẫu tín hiệu.
-- `df = Fs/N`: bước nhảy tần số.
 
-**Công thức quan trọng:**
+### Biến đổi Fourier
 
 ```matlab
 X = fft(x);
 X_shift = fftshift(X);
-f = -Fs/2 : df : Fs/2 - df;
-X_mag = abs(X_shift)/N;
+f = (-N/2:N/2-1) * (fs/N);
+bien_do = abs(X_shift) / N;
 ```
 
-**Hàm dùng:**
+### Kiến thức cần nhớ
 
-- `plot`: vẽ tín hiệu miền thời gian.
-- `fft`: biến đổi Fourier.
-- `fftshift`: dịch phổ về giữa trục tần số.
-- `stem`: vẽ phổ dạng vạch.
+- `fft` dùng để chuyển tín hiệu từ miền thời gian sang miền tần số.
+- `fftshift` dùng để đưa tần số 0 về giữa phổ.
+- `abs(X_shift)/N` dùng để lấy biên độ phổ đã chuẩn hóa.
+- Tín hiệu có hai thành phần tần số chính là `15 Hz` và `20 Hz`.
+- Vì tín hiệu là tín hiệu thực nên phổ xuất hiện đối xứng tại `±15 Hz` và `±20 Hz`.
+
+### Hàm cần nhớ
+
+```matlab
+plot
+fft
+fftshift
+length
+abs
+grid on
+xlabel
+ylabel
+title
+xlim
+```
 
 ---
 
-## Bài 2 - Mã đường CMI
+## Câu 2 - Mã đường CMI
 
-**Mục tiêu:** tạo chuỗi bit nhị phân, mã hóa thành dạng sóng CMI và vẽ 10 chu kỳ bit đầu.
+### Mục tiêu
 
-**Thông số cần quan tâm:**
+Tạo chuỗi bit nhị phân gồm 50 phần tử, mã hóa sang mã đường CMI và vẽ dạng sóng trong 10 chu kỳ bit đầu.
 
-- `Rb`: tốc độ bit.
+### Thông số cần chú ý
+
+- `Rb = 500e6`: tốc độ bit.
 - `Tb = 1/Rb`: chu kỳ bit.
-- `Nbit`: số bit.
-- `Ns`: số mẫu trên một bit.
-- `Ts = Tb/Ns`: khoảng cách giữa hai mẫu.
+- `Nbit = 50`: số bit.
+- `Ns = 1000`: số mẫu trên 1 bit.
+- `Ts = Tb/Ns`: khoảng cách giữa hai lần lấy mẫu.
+- `bit`: chuỗi bit nhị phân.
+- `x`: tín hiệu CMI.
 
-**Quy tắc mã CMI:**
+Với `Rb = 500e6`:
 
 ```text
-Bit 0 -> nửa đầu -1, nửa sau +1
-Bit 1 -> giữ nguyên +1 hoặc -1 trong cả chu kỳ bit, các bit 1 đảo dấu luân phiên
-```
-
-**Hàm dùng:**
-
-- `randi([0 1], 1, Nbit)`: tạo chuỗi bit ngẫu nhiên.
-- `zeros`: tạo mảng tín hiệu ban đầu.
-- `for`, `if`: mã hóa từng bit.
-- `plot`: vẽ dạng sóng CMI.
-
-**Lưu ý:**
-
-Vì `Rb = 500e6`, nên:
-
-```matlab
 Tb = 1/Rb = 2e-9 s = 2 ns
 ```
 
-Do đó khi vẽ thường dùng:
+### Quy tắc mã CMI
+
+```text
+Bit 0:
+    Nửa đầu chu kỳ bit  -> -1
+    Nửa sau chu kỳ bit  -> +1
+
+Bit 1:
+    Giữ nguyên mức trong cả chu kỳ bit
+    Các bit 1 đảo dấu luân phiên +1, -1, +1, -1,...
+```
+
+### Đoạn code quan trọng
+
+Tạo chuỗi bit:
+
+```matlab
+bit = randi([0 1], 1, Nbit);
+```
+
+Mã hóa bit 0:
+
+```matlab
+x(start:mid) = -1;
+x(mid + 1:stop) = 1;
+```
+
+Mã hóa bit 1:
+
+```matlab
+x(start:stop) = muc_1;
+muc_1 = -muc_1;
+```
+
+Khi vẽ đổi thời gian sang nano giây:
 
 ```matlab
 t * 1e9
 ```
 
-để đổi trục thời gian từ giây sang nano giây.
+### Hàm cần nhớ
+
+```matlab
+randi
+zeros
+for
+if else
+disp
+plot
+grid on
+xlabel
+ylabel
+title
+ylim
+xlim
+```
 
 ---
 
-## Bài 3 - Điều chế pha PM, kênh AWGN và giải điều chế
+## Câu 3 - Điều chế pha PM, kênh AWGN và giải điều chế
 
-**Mục tiêu:** điều chế pha tín hiệu tương tự, truyền qua kênh AWGN, giải điều chế và vẽ kết quả.
+### Mục tiêu
 
-Tín hiệu bản tin:
+Điều chế pha tín hiệu bản tin, truyền qua kênh AWGN, giải điều chế và vẽ kết quả.
+
+### Tín hiệu bản tin
 
 ```matlab
 x = cos(40*pi*t - pi) + 3*cos(30*pi*t);
 ```
 
-### a. Điều chế pha PM
+### Thông số cần chú ý
 
-**Thông số cần quan tâm:**
+- `Fs = 200000`: tần số lấy mẫu.
+- `fc = 10000`: tần số sóng mang.
+- `phic = 0`: pha ban đầu của sóng mang.
+- `beta = 0.5`: chỉ số điều chế pha.
+- `Pn = 2`: công suất nhiễu.
+- `y`: tín hiệu sau điều chế PM.
+- `y_noise`: tín hiệu sau khi qua kênh AWGN.
+- `x_rec`: tín hiệu sau giải điều chế.
 
-- `fc`: tần số sóng mang.
-- `Fs`: tần số lấy mẫu.
-- `phic`: pha ban đầu của sóng mang.
-- `beta`: hệ số lệch pha / chỉ số điều chế pha.
-
-**Hàm dùng:**
+### Điều chế pha PM
 
 ```matlab
 y = pmmod(x, fc, Fs, beta, phic);
 ```
 
-Hoặc theo công thức:
+Ý nghĩa: pha của sóng mang thay đổi theo biên độ tín hiệu bản tin.
+
+### Kênh AWGN
+
+Tạo nhiễu Gauss trắng:
 
 ```matlab
-y = Ac*cos(2*pi*fc*t + kp*x);
+nhieu = sqrt(Pn) * randn(size(y));
 ```
 
-### b. Kênh AWGN
-
-**Thông số cần quan tâm:**
-
-- `Pn`: công suất nhiễu.
-- `randn`: tạo nhiễu Gauss trắng.
-
-**Công thức dùng:**
+Cộng nhiễu vào tín hiệu:
 
 ```matlab
-nhieu = sqrt(Pn)*randn(size(y));
 y_noise = y + nhieu;
 ```
 
-Vì `randn` tạo nhiễu có phương sai 1, nên muốn công suất nhiễu là `Pn` thì nhân với `sqrt(Pn)`.
-
-### c. Giải điều chế PM
-
-**Hàm dùng:**
+### Giải điều chế PM
 
 ```matlab
 x_rec = pmdemod(y_noise, fc, Fs, beta, phic);
 ```
 
-Nếu tín hiệu sau giải điều chế bị nhiễu mạnh, có thể làm mượt để dễ quan sát:
+Làm mượt tín hiệu sau giải điều chế:
 
 ```matlab
 x_rec = movmean(x_rec, 1000);
 ```
 
-### d. Vẽ kết quả
+### Hàm cần nhớ
 
-**Hàm dùng:**
-
-- `subplot(3,1,1)`: vẽ tín hiệu bản tin.
-- `subplot(3,1,2)`: vẽ tín hiệu sau điều chế.
-- `subplot(3,1,3)`: vẽ tín hiệu sau giải điều chế.
-- `plot`, `grid on`, `xlabel`, `ylabel`, `title`.
+```matlab
+pmmod
+pmdemod
+randn
+sqrt
+size
+movmean
+subplot
+plot
+grid on
+xlabel
+ylabel
+title
+xlim
+```
 
 ---
 
-## Tóm tắt hàm MATLAB quan trọng
+## Tổng hợp hàm MATLAB quan trọng
 
 | Hàm | Công dụng |
 |---|---|
-| `plot` | Vẽ đồ thị liên tục |
-| `stem` | Vẽ phổ dạng vạch |
-| `subplot` | Chia một hình thành nhiều đồ thị nhỏ |
+| `plot` | Vẽ đồ thị tín hiệu |
+| `subplot` | Chia cửa sổ hình thành nhiều đồ thị |
 | `fft` | Biến đổi Fourier nhanh |
-| `fftshift` | Dịch phổ để tần số 0 nằm giữa |
-| `randi` | Tạo bit ngẫu nhiên |
+| `fftshift` | Dịch phổ về giữa trục tần số |
+| `abs` | Lấy biên độ phổ |
+| `length` | Lấy số mẫu tín hiệu |
+| `randi` | Tạo chuỗi bit ngẫu nhiên |
+| `zeros` | Tạo mảng toàn số 0 |
 | `randn` | Tạo nhiễu Gauss trắng |
+| `sqrt` | Tính căn bậc hai |
+| `size` | Lấy kích thước mảng |
 | `pmmod` | Điều chế pha PM |
 | `pmdemod` | Giải điều chế pha PM |
 | `movmean` | Làm mượt tín hiệu |
+| `grid on` | Bật lưới đồ thị |
+| `xlabel`, `ylabel`, `title` | Ghi nhãn trục và tiêu đề |
+
+---
+
+## Ghi chú chung
+
+- Nên dùng `clc; clear; close all;` ở đầu chương trình.
+- Khi phân tích phổ nên dùng `fftshift` để phổ đối xứng quanh tần số 0.
+- Khi vẽ tín hiệu tốc độ cao nên đổi trục thời gian sang nano giây bằng `t*1e9`.
+- Với mã CMI, cần nhớ rõ quy tắc mã hóa bit 0 và bit 1.
+- Với PM, quá trình chính gồm: điều chế, cộng nhiễu AWGN, giải điều chế.
