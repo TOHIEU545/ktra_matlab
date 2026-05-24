@@ -1,0 +1,19 @@
+function [x, y] = euler_binedoi(f, x0, y0, h, N)
+
+x = zeros(1, N + 1);
+y = zeros(1, N + 1);
+
+x(1) = x0;
+y(1) = y0;
+
+for k = 1:N
+    x(k + 1) = x(k) + h;
+
+    % Du doan bang euler thuong
+    y_predict = y(k) + h * f(x(k), y(k));
+
+    % Hieu chinh bang trung binh 2 do doc
+    y(k + 1) = y(k) + h/2 * (f(x(k), y(k)) + f(x(k + 1), y_predict));
+end
+
+end

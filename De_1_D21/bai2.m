@@ -16,5 +16,4 @@ figure;
 plot(x, y, 'o-', 'LineWidth', 1.5);
 grid on;
 xlabel('x');
-ylabel('y');
-title('Giai phuong trinh vi phan dy/dx = x^2 - 2y bang Euler');
+ylabel('y');title('Giai phuong trinh vi phan dy/dx = x^2 - 2y bang Euler');
