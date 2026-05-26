@@ -42,12 +42,11 @@ title('Chom sao sau kenh AWGN');
 
 % d. Tinh so bit loi
 symbol_rx = pskdemod(rx_signal, M, pi / M);
-bit_rx_matrix = de2bi(symbol_rx, k, 'left-msb');
+bit_rx_matrix = de2bi(symbol_rx, 'left-msb');
 bit_rx = reshape(bit_rx_matrix.', 1, []);
 
 % Tinh so bit loi
 so_bit_loi = sum(bit ~= bit_rx);
 BER = so_bit_loi / Nbit;
 
-disp(['So bit loi: ', num2str(so_bit_loi)]);
-disp(['Ti le loi BER: ', num2str(BER)]);
+disp(['So bit loi: ', num2str(so)])

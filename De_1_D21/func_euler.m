@@ -6,8 +6,8 @@ y = zeros(1, N + 1);
 x(1) = x0;
 y(1) = y0;
 
-for k = 1:N
+for k = 2:N
     x(k + 1) = x(k) + h;
-    y(k + 1) = y(k) + h * f(x(k), y(k));
+    y(k + 1) = y(k) + f(x(k), y(k));
 end
 end
