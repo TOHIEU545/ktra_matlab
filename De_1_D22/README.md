@@ -1,365 +1,708 @@
-# README - 3 bài MATLAB: FFT, RZ và AM
+# README - Ghi chú kiến thức và công thức MATLAB
 
-## Bài 1: Mô phỏng tín hiệu và biến đổi Fourier
+Tài liệu này tổng hợp các kiến thức, công thức và ý nghĩa các bước dùng trong 3 file MATLAB:
 
-### Mục tiêu
+- `bai1(6).m`: mô phỏng tín hiệu tương tự và biến đổi Fourier.
+- `bai2(6).m`: tạo chuỗi bit và mã đường RZ 25% lưỡng cực.
+- `bai3(5).m`: điều chế AM, truyền qua kênh AWGN và giải điều chế.
 
-- Tạo tín hiệu trong miền thời gian.
-- Tính FFT.
-- Vẽ phổ biên độ 1 phía và 2 phía.
+---
 
-### Tín hiệu
+## 1. File `bai1(6).m` - Tín hiệu tương tự và phổ Fourier
 
-```matlab
-x(t) = cos(20*pi*t + pi/2) + 2*sin(30*pi*t)
+### 1.1. Tín hiệu ban đầu
+
+Tín hiệu được xét:
+
+```math
+x(t) = \cos\left(20\pi t + \frac{\pi}{2}\right) + 2\sin(30\pi t)
 ```
 
-Dạng tổng quát:
+Trong đó:
 
-```matlab
-cos(2*pi*f*t + phi)
-sin(2*pi*f*t + phi)
+```math
+\omega = 2\pi f
 ```
 
 Suy ra:
 
-```matlab
-cos(20*pi*t + pi/2)  -> f = 10 Hz
-sin(30*pi*t)         -> f = 15 Hz
+```math
+20\pi = 2\pi f_1 \Rightarrow f_1 = 10\text{ Hz}
 ```
 
-### Lấy mẫu
+```math
+30\pi = 2\pi f_2 \Rightarrow f_2 = 15\text{ Hz}
+```
+
+Vậy tín hiệu gồm 2 thành phần tần số chính:
+
+- Thành phần cos có tần số `10 Hz`.
+- Thành phần sin có tần số `15 Hz`.
+
+### 1.2. Lấy mẫu tín hiệu
+
+Trong MATLAB:
 
 ```matlab
 fs = 1000;
-ts = 1/fs;
-T = 1;
-t = 0:ts:T-ts;
+ts = 1 / fs;
+t = 0:ts:1-ts;
 ```
 
 Ý nghĩa:
 
-```matlab
-fs : tần số lấy mẫu
-ts : chu kỳ lấy mẫu
-T  : thời gian mô phỏng
+```math
+T_s = \frac{1}{f_s}
 ```
 
-### FFT
+Trong đó:
+
+- `fs`: tần số lấy mẫu.
+- `ts`: chu kỳ lấy mẫu.
+- `t`: vector thời gian.
+
+Với `fs = 1000 Hz`, mỗi giây có 1000 mẫu.
+
+### 1.3. Biến đổi Fourier rời rạc bằng FFT
+
+Trong MATLAB:
 
 ```matlab
-N = length(x);
-X = fft(x);
-df = fs/N;
+x_fft = fft(x);
 ```
 
-Công thức cần nhớ:
+Lệnh `fft` dùng để chuyển tín hiệu từ miền thời gian sang miền tần số.
 
-```matlab
-df = fs/N
+Công thức DFT:
+
+```math
+X[k] = \sum_{n=0}^{N-1} x[n]e^{-j2\pi kn/N}
 ```
 
-`df` là độ phân giải tần số.
+Trong đó:
 
-### Phổ 2 phía
+- `x[n]`: tín hiệu rời rạc trong miền thời gian.
+- `X[k]`: tín hiệu trong miền tần số.
+- `N`: số mẫu của tín hiệu.
+
+### 1.4. Chuẩn hóa phổ biên độ
+
+Trong MATLAB:
 
 ```matlab
-X_shift = fftshift(X);
-f_2_phia = -fs/2 : df : fs/2 - df;
-pho_2_phia = abs(X_shift)/N;
+pho_bien_do_2_phia = abs(x_fft_shift) / N;
 ```
 
-Lưu ý:
+Ý nghĩa:
 
-```matlab
-fftshift dùng để đưa phổ về khoảng -fs/2 đến fs/2.
-Phổ 2 phía có cả tần số âm và tần số dương.
+```math
+|X(f)| = \frac{|FFT(x)|}{N}
 ```
 
-### Phổ 1 phía
+Chia cho `N` để chuẩn hóa biên độ phổ.
+
+### 1.5. Dùng `fftshift`
+
+Trong MATLAB:
 
 ```matlab
-pho_goc = abs(X)/N;
-pho_1_phia = pho_goc(1:N/2+1);
-pho_1_phia(2:end-1) = 2*pho_1_phia(2:end-1);
-f_1_phia = 0:df:fs/2;
+x_fft_shift = fftshift(x_fft);
 ```
 
-Lưu ý:
+Lệnh `fftshift` đưa phổ về dạng 2 phía, trục tần số nằm trong khoảng:
+
+```math
+-\frac{f_s}{2} \le f < \frac{f_s}{2}
+```
+
+Vector tần số:
 
 ```matlab
-Phổ 1 phía chỉ lấy từ 0 đến fs/2.
-Nhân đôi các thành phần ở giữa.
-Không nhân đôi DC và Nyquist.
+df = fs / N;
+f_2_phia = -fs/2:df:fs/2-df;
+```
+
+Trong đó:
+
+```math
+\Delta f = \frac{f_s}{N}
 ```
 
 ---
 
-## Bài 2: Tạo chuỗi bit và mã RZ
+## 2. File `bai2(6).m` - Mã đường RZ 25% lưỡng cực
 
-### Mục tiêu
+### 2.1. Tạo chuỗi bit nhị phân
 
-- Tạo chuỗi bit nhị phân 100 bit.
-- Chuyển chuỗi bit sang dạng sóng RZ.
-- Vẽ 10 chu kỳ bit đầu tiên.
-
-### Thông số
+Trong MATLAB:
 
 ```matlab
-Rb = 1e9;
-Tb = 1/Rb;
 Nbit = 100;
-Ns = 1000;
-Ts = Tb/Ns;
-```
-
-Ý nghĩa:
-
-```matlab
-Rb   : tốc độ bit
-Tb   : chu kỳ bit
-Nbit : số bit
-Ns   : số mẫu trên 1 bit
-Ts   : thời gian giữa 2 mẫu
-```
-
-Công thức cần nhớ:
-
-```matlab
-Tb = 1/Rb
-Ts = Tb/Ns
-```
-
-### Tạo chuỗi bit
-
-```matlab
 bit = randi([0 1], 1, Nbit);
 ```
 
-### Mã RZ
+Ý nghĩa:
 
-RZ nghĩa là tín hiệu giữ mức trong một phần chu kỳ bit, sau đó trở về 0.
+- `Nbit = 100`: tạo chuỗi gồm 100 bit.
+- `randi([0 1], 1, Nbit)`: sinh ngẫu nhiên các bit 0 hoặc 1.
+
+### 2.2. Tốc độ bit và chu kỳ bit
+
+Trong MATLAB:
 
 ```matlab
-duty = 0.25;   % RZ 25%
-duty = 0.75;   % RZ 75%
+Rb = 1e9;
+Tb = 1 / Rb;
 ```
 
-Số mẫu giữ mức xung:
+Công thức:
 
-```matlab
-Ns_xung = round(duty*Ns);
+```math
+T_b = \frac{1}{R_b}
 ```
 
-Nên dùng `round` để tránh lỗi chỉ số mảng.
+Với:
 
-### Quy tắc mã RZ lưỡng cực
-
-```matlab
-Bit 1 -> mức  1 trong duty*Tb, sau đó về 0
-Bit 0 -> mức -1 trong duty*Tb, sau đó về 0
+```math
+R_b = 1\text{ Gbps} = 10^9\text{ bit/s}
 ```
 
-Nếu là RZ đơn cực:
+Suy ra:
 
-```matlab
-Bit 1 -> mức 1 trong duty*Tb, sau đó về 0
-Bit 0 -> mức 0 trong toàn bộ Tb
+```math
+T_b = 10^{-9}\text{ s} = 1\text{ ns}
 ```
 
-### Chỉ số mẫu của bit thứ k
+### 2.3. Số mẫu trên mỗi bit
+
+Trong MATLAB:
 
 ```matlab
-start = (k - 1)*Ns + 1;
-stop = k*Ns;
-stop_xung = start + Ns_xung - 1;
+Ns = 1000;
+Ts = Tb / Ns;
 ```
 
-### Vẽ 10 bit đầu
+Ý nghĩa:
 
-```matlab
-so_bit_ve = 10;
-so_mau_ve = so_bit_ve*Ns;
-t = 0:Ts:Ts*(so_mau_ve - 1);
+- `Ns`: số mẫu dùng để biểu diễn 1 bit.
+- `Ts`: khoảng thời gian giữa 2 mẫu liên tiếp.
 
-plot(t*1e9, x(1:so_mau_ve));
-xlim([0 so_bit_ve*Tb*1e9]);
+Công thức:
+
+```math
+T_s = \frac{T_b}{N_s}
 ```
 
-Lưu ý:
+### 2.4. Mã đường RZ 25%
+
+RZ là viết tắt của `Return to Zero`, nghĩa là tín hiệu có xung rồi trở về 0 trong cùng một chu kỳ bit.
+
+RZ 25% nghĩa là xung chỉ tồn tại trong 25% thời gian bit:
+
+```math
+T_{xung} = 0.25T_b
+```
+
+Phần còn lại trở về 0:
+
+```math
+T_0 = 0.75T_b
+```
+
+Trong code:
 
 ```matlab
-Nếu plot(t*1e9) thì trục thời gian là ns.
-Khi đó xlim cũng phải nhân 1e9.
+ones(1, Ns*0.25), zeros(1, Ns*0.75)
+```
+
+nghĩa là:
+
+- 25% số mẫu đầu có biên độ khác 0.
+- 75% số mẫu sau có biên độ 0.
+
+### 2.5. Mã RZ 25% lưỡng cực
+
+Lưỡng cực nghĩa là tín hiệu có cả mức dương và mức âm:
+
+```math
+bit\ 1 \Rightarrow +1\ trong\ 25\%T_b,\ sau\ đó\ về\ 0
+```
+
+```math
+bit\ 0 \Rightarrow -1\ trong\ 25\%T_b,\ sau\ đó\ về\ 0
+```
+
+Cách mã hóa:
+
+```matlab
+if bit(k) == 1
+    x = [x, ones(1, Ns*0.25), zeros(1, Ns*0.75)];
+else
+    x = [x, -1*ones(1, Ns*0.25), zeros(1, Ns*0.75)];
+end
+```
+
+Nên viết chắc hơn bằng cách dùng số mẫu nguyên:
+
+```matlab
+Np = round(Ns * 0.25);
+Nz = Ns - Np;
+```
+
+Sau đó:
+
+```matlab
+if bit(k) == 1
+    x = [x, ones(1, Np), zeros(1, Nz)];
+else
+    x = [x, -ones(1, Np), zeros(1, Nz)];
+end
 ```
 
 ---
 
-## Bài 3: Điều chế và giải điều chế AM
+## 3. File `bai3(5).m` - Điều chế AM, kênh AWGN và giải điều chế
 
-### Mục tiêu
+### 3.1. Tín hiệu bản tin
 
-- Tạo tín hiệu bản tin.
-- Điều chế AM.
-- Truyền qua kênh AWGN.
-- Giải điều chế AM.
-- Vẽ tín hiệu trước và sau xử lý.
+Tín hiệu bản tin trong file:
 
-### Tín hiệu bản tin
-
-```matlab
-x(t) = cos(20*pi*t + pi/2) + 2*sin(30*pi*t)
+```math
+x(t) = \cos\left(20\pi t - \frac{\pi}{2}\right) + 2\sin(30\pi t)
 ```
 
-Tần số thành phần:
+Tương tự bài 1, tín hiệu gồm hai thành phần chính:
+
+- Thành phần tần số `10 Hz`.
+- Thành phần tần số `15 Hz`.
+
+### 3.2. Sóng mang
+
+Trong MATLAB:
 
 ```matlab
-cos(20*pi*t + pi/2) -> f = 10 Hz
-sin(30*pi*t)        -> f = 15 Hz
-```
-
-### Điều chế AM dùng hàm
-
-```matlab
-y = ammod(x, fc, Fs, phic, A);
-```
-
-### Điều chế AM không dùng hàm
-
-### Cách 1: dùng chỉ số điều chế m
-
-```matlab
-Am = max(abs(x));
-x_norm = x/Am;
 xc = Ac*cos(2*pi*fc*t + phic);
-y = (1 + m*x_norm).*xc;
 ```
 
-Cách này phù hợp khi đề cho `m`.
+Công thức:
 
-### Cách 2: dùng trực tiếp Ac và x
-
-```matlab
-carrier = cos(2*pi*fc*t + phic);
-y = (Ac + x).*carrier;
+```math
+x_c(t) = A_c\cos(2\pi f_c t + \varphi_c)
 ```
 
-Cách này tương đương với trường hợp:
+Trong đó:
 
-```matlab
-m = Am/Ac
+- `Ac`: biên độ sóng mang.
+- `fc`: tần số sóng mang.
+- `phic`: pha ban đầu của sóng mang.
+
+Trong bài:
+
+```math
+f_c = 1\text{ kHz} = 1000\text{ Hz}
 ```
 
-Lưu ý tránh nhầm:
+### 3.3. Chuẩn hóa tín hiệu bản tin
+
+Trong MATLAB:
 
 ```matlab
-Nếu đề cho rõ m = 0.5 thì nên dùng cách 1.
-Nếu không đề cập m mà chỉ cần AM có sóng mang thì có thể dùng cách 2.
-
-### Thêm nhiễu AWGN dùng hàm
-
-```matlab
-y_noise = awgn(y, SNR, 'measured');
+x_norm = x / max(abs(x));
 ```
 
-### Thêm nhiễu AWGN không dùng hàm
+Ý nghĩa:
 
-Công suất tín hiệu:
+```math
+x_{norm}(t) = \frac{x(t)}{\max|x(t)|}
+```
+
+Mục đích:
+
+- Đưa biên độ tín hiệu bản tin về khoảng gần `[-1, 1]`.
+- Giúp tránh quá điều chế khi thực hiện AM.
+
+### 3.4. Điều chế biên độ AM
+
+Trong MATLAB:
+
+```matlab
+y = (1 + m*x_norm) .* xc;
+```
+
+Công thức:
+
+```math
+y(t) = A_c[1 + m x_{norm}(t)]\cos(2\pi f_c t + \varphi_c)
+```
+
+Trong đó:
+
+- `m`: hệ số điều chế.
+- `x_norm(t)`: tín hiệu bản tin đã chuẩn hóa.
+- `xc`: sóng mang.
+
+Điều kiện để tránh quá điều chế:
+
+```math
+0 \le m \le 1
+```
+
+Nếu `m > 1`, tín hiệu có thể bị méo do quá điều chế.
+
+### 3.5. Công suất tín hiệu
+
+Trong MATLAB:
 
 ```matlab
 Ps = mean(y.^2);
 ```
 
-Công suất nhiễu theo SNR:
+Công thức công suất trung bình:
 
-```matlab
-Pn = Ps / 10^(SNR/10);
+```math
+P_s = \frac{1}{N}\sum_{n=1}^{N} y^2[n]
 ```
 
-Tạo nhiễu:
+### 3.6. SNR và đổi từ dB sang dạng thường
+
+Trong MATLAB:
 
 ```matlab
-noise = sqrt(Pn)*randn(size(y));
-y_noise = y + noise;
+SNR_dB = 5;
+SNR = 10^(SNR_dB/10);
 ```
 
-Lưu ý:
+Công thức:
 
-```matlab
-Dùng randn để tạo nhiễu Gaussian có cả âm và dương.
-Không dùng rand vì rand chỉ từ 0 đến 1, dễ gây lệch DC.
+```math
+SNR_{dB} = 10\log_{10}(SNR)
 ```
 
-### Giải điều chế AM dùng hàm
+Suy ra:
 
-```matlab
-x_rec = amdemod(y_noise, fc, Fs, phic, A);
+```math
+SNR = 10^{SNR_{dB}/10}
 ```
 
-### Giải điều chế AM không dùng hàm
+Với `SNR_dB = 5 dB`:
 
-Nhân lại với sóng mang:
-
-```matlab
-z = 2*y_noise.*cos(2*pi*fc*t + phic);
+```math
+SNR = 10^{5/10}
 ```
 
-Lọc thông thấp:
+### 3.7. Công suất nhiễu AWGN
+
+Trong MATLAB:
 
 ```matlab
-z_lpf = movmean(z, 500);
+Pn = Ps / SNR;
 ```
 
-Trừ thành phần DC:
+Công thức:
 
-```matlab
-x_rec = z_lpf - A;
+```math
+SNR = \frac{P_s}{P_n}
 ```
 
-Công thức tóm tắt:
+Suy ra:
+
+```math
+P_n = \frac{P_s}{SNR}
+```
+
+### 3.8. Tạo nhiễu Gauss trắng AWGN
+
+Trong MATLAB:
 
 ```matlab
-z(t) = 2*y_noise(t)*cos(2*pi*fc*t + phic)
-x_rec(t) = LPF{z(t)} - A
+noise = sqrt(Pn) * randn(size(y));
+r = y + noise;
+```
+
+Ý nghĩa:
+
+- `randn(size(y))`: tạo nhiễu Gauss có trung bình 0, phương sai 1.
+- `sqrt(Pn)`: chỉnh biên độ nhiễu để công suất nhiễu bằng `Pn`.
+- `r`: tín hiệu thu sau khi qua kênh AWGN.
+
+Công thức:
+
+```math
+r(t) = y(t) + n(t)
+```
+
+Trong đó:
+
+```math
+n(t) \sim \mathcal{N}(0, P_n)
+```
+
+### 3.9. Giải điều chế AM đồng bộ
+
+Trong MATLAB:
+
+```matlab
+v = 2*r.*cos(2*pi*fc*t + phic);
+```
+
+Bên thu nhân tín hiệu nhận được với sóng mang cùng tần số và cùng pha.
+
+Do:
+
+```math
+\cos^2(\omega_c t) = \frac{1 + \cos(2\omega_c t)}{2}
+```
+
+nên khi nhân lại với sóng mang, tín hiệu xuất hiện hệ số `1/2`. Vì vậy nhân thêm `2` để bù hệ số này.
+
+Sau khi nhân:
+
+```math
+v(t) \approx A_c[1 + m x_{norm}(t)] + \text{thành phần cao tần}
+```
+
+### 3.10. Lọc thông thấp bằng trung bình trượt
+
+Trong MATLAB:
+
+```matlab
+L = round(fs/fc);
+h = ones(1, L) / L;
+z = conv(v, h, 'same');
+```
+
+Trong đó:
+
+```math
+L = \frac{f_s}{f_c}
+```
+
+`L` là số mẫu trong một chu kỳ sóng mang.
+
+Bộ lọc trung bình trượt:
+
+```math
+h[n] = \frac{1}{L},\quad n = 0,1,...,L-1
+```
+
+Tác dụng:
+
+- Loại bớt thành phần cao tần sau khi nhân giải điều chế.
+- Làm mượt tín hiệu.
+- Giảm nhiễu.
+
+Lệnh:
+
+```matlab
+conv(v, h, 'same')
+```
+
+thực hiện tích chập và giữ kết quả có cùng độ dài với tín hiệu ban đầu.
+
+### 3.11. Loại bỏ DC và khôi phục tín hiệu bản tin
+
+Sau lọc thông thấp, ta có gần đúng:
+
+```math
+z(t) \approx A_c[1 + m x_{norm}(t)]
+```
+
+Khai triển:
+
+```math
+z(t) \approx A_c + A_c m x_{norm}(t)
+```
+
+Muốn lấy lại `x_norm(t)`:
+
+```math
+x_{rec,norm}(t) = \frac{z(t) - A_c}{A_c m}
+```
+
+Trong MATLAB:
+
+```matlab
+x_rec_norm = (z - Ac) / (Ac * m);
+```
+
+Do tín hiệu ban đầu đã chuẩn hóa bằng:
+
+```math
+x_{norm}(t) = \frac{x(t)}{\max|x(t)|}
+```
+
+nên cần nhân lại để khôi phục biên độ gần ban đầu:
+
+```math
+x_{rec}(t) = x_{rec,norm}(t)\max|x(t)|
+```
+
+Trong MATLAB:
+
+```matlab
+x_rec = x_rec_norm * max(abs(x));
 ```
 
 ---
 
-## Công thức cần nhớ
+## 4. Các lệnh MATLAB quan trọng cần nhớ
+
+### 4.1. Lệnh tạo vector thời gian
 
 ```matlab
-Ts = 1/Fs
-df = Fs/N
-Tb = 1/Rb
-Ts_bit = Tb/Ns
-Ns_xung = round(duty*Ns)
+t = 0:ts:1-ts;
 ```
 
-```matlab
-y_AM(t) = [A + x(t)]*cos(2*pi*fc*t + phic)
-```
+Tạo vector thời gian từ `0` đến gần `1 s` với bước `ts`.
+
+### 4.2. Lệnh vẽ tín hiệu
 
 ```matlab
-Ps = mean(y.^2)
-Pn = Ps / 10^(SNR/10)
-noise = sqrt(Pn)*randn(size(y))
+plot(t, x, 'LineWidth', 1.5);
+grid on;
+xlabel('Thoi gian t(s)');
+ylabel('Bien do');
+title('Ten hinh');
 ```
 
+### 4.3. Lệnh vẽ nhiều hình trong cùng một figure
+
 ```matlab
-z(t) = 2*y_noise(t)*cos(2*pi*fc*t + phic)
-x_rec(t) = LPF{z(t)} - A
+subplot(3,1,1);
+subplot(3,1,2);
+subplot(3,1,3);
+```
+
+`subplot(3,1,1)` nghĩa là chia figure thành 3 hàng, 1 cột, chọn ô thứ nhất.
+
+### 4.4. Nhân từng phần tử
+
+Trong MATLAB, khi nhân hai vector cùng kích thước, dùng:
+
+```matlab
+.*
+```
+
+Ví dụ:
+
+```matlab
+y = (1 + m*x_norm) .* xc;
+```
+
+Không dùng `*` vì `*` là nhân ma trận.
+
+### 4.5. Bình phương từng phần tử
+
+```matlab
+y.^2
+```
+
+Dấu `.^` dùng để bình phương từng phần tử trong vector.
+
+### 4.6. Tạo nhiễu Gauss
+
+```matlab
+randn(size(y))
+```
+
+Tạo vector nhiễu Gauss có cùng kích thước với `y`.
+
+### 4.7. Tích chập
+
+```matlab
+z = conv(v, h, 'same');
+```
+
+Dùng để lọc tín hiệu qua đáp ứng xung `h`.
+
+---
+
+## 5. Tóm tắt công thức chính
+
+### Tần số góc
+
+```math
+\omega = 2\pi f
+```
+
+### Chu kỳ lấy mẫu
+
+```math
+T_s = \frac{1}{f_s}
+```
+
+### Chu kỳ bit
+
+```math
+T_b = \frac{1}{R_b}
+```
+
+### Độ phân giải tần số FFT
+
+```math
+\Delta f = \frac{f_s}{N}
+```
+
+### Điều chế AM
+
+```math
+y(t) = A_c[1 + m x_{norm}(t)]\cos(2\pi f_c t + \varphi_c)
+```
+
+### SNR dạng dB
+
+```math
+SNR_{dB} = 10\log_{10}\left(\frac{P_s}{P_n}\right)
+```
+
+### Đổi SNR dB sang dạng thường
+
+```math
+SNR = 10^{SNR_{dB}/10}
+```
+
+### Công suất nhiễu
+
+```math
+P_n = \frac{P_s}{SNR}
+```
+
+### Kênh AWGN
+
+```math
+r(t) = y(t) + n(t)
+```
+
+### Giải điều chế đồng bộ
+
+```math
+v(t) = 2r(t)\cos(2\pi f_c t + \varphi_c)
+```
+
+### Công thức nhân cos
+
+```math
+\cos^2(\omega t) = \frac{1 + \cos(2\omega t)}{2}
+```
+
+### Khôi phục tín hiệu sau giải điều chế AM
+
+```math
+x_{rec,norm}(t) = \frac{z(t) - A_c}{A_c m}
+```
+
+```math
+x_{rec}(t) = x_{rec,norm}(t)\max|x(t)|
 ```
 
 ---
 
-## Ghi nhớ nhanh
+## 6. Ghi chú lỗi dễ gặp
 
-- FFT muốn phổ đẹp thì tín hiệu nên chứa số chu kỳ nguyên trong thời gian lấy mẫu.
-- RZ 25%: giữ mức trong 25% chu kỳ bit rồi về 0.
-- RZ 75%: giữ mức trong 75% chu kỳ bit rồi về 0.
-- AM cần `A > max(abs(x))`.
-- AWGN nên dùng `randn`, không dùng `rand`.
-- SNR càng cao thì tín hiệu sau giải điều chế càng đẹp.
-- `fc` phải lớn hơn nhiều so với tần số lớn nhất của tín hiệu bản tin.
-- `Fs` phải đủ lớn so với `fc`.
-- `movmean` làm mượt tín hiệu nhưng cửa sổ quá lớn có thể làm méo tín hiệu.
+1. Khi nhân hai vector tín hiệu, phải dùng `.*`, không dùng `*`.
+2. Khi bình phương từng phần tử, dùng `.^2`, không dùng `^2`.
+3. Khi dùng RZ 25%, số mẫu xung nên là số nguyên, nên dùng `round`.
+4. Khi vẽ tín hiệu điều chế có tần số sóng mang cao, nên giới hạn trục thời gian nhỏ, ví dụ `xlim([0 0.02])`.
+5. Khi giải điều chế đồng bộ, sóng mang phía thu phải cùng tần số và cùng pha với sóng mang phía phát.
+6. Nếu `m > 1`, AM có thể bị quá điều chế và tín hiệu sau giải điều chế sẽ bị méo.
+7. Với AWGN, SNR càng thấp thì nhiễu càng mạnh và tín hiệu khôi phục càng xấu.
