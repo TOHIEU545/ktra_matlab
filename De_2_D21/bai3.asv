@@ -1,6 +1,0 @@
-clc; clear;
-
-% a.
-Nbit = 10000;
-bit = [zeros(1, Nbit / 2), ones(1, Nbit / 2)];
-bit = bit(randperm(Nbit))

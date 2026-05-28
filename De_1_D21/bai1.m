@@ -3,7 +3,9 @@ clc; clear
 % Thiet lap thong so 
 fs = 100000;
 ts = 1 / fs;
-t = 0:ts:1- ts;
+F = 10;
+T = 1 / F;
+t = 0:ts:10*T - ts;
 
 % Tin hieu ban tin
 x = cos(20*pi*t + pi / 2);
@@ -24,7 +26,6 @@ x_norm = x / max(abs(x));
 y = (1 + m*x_norm) .* xc;
 
 % b.
-T = 1 / 10;
 N_mau = round(10*T*fs);
 
 figure;

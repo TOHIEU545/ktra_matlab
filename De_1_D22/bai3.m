@@ -5,47 +5,23 @@ fs = 100000;
 ts = 1 / fs;
 t = 0:ts:1 - ts;
 
-x = cos(20*pi*t - pi / 2) + 2*sin(30*pi*t);
+x = cos(20*pi*t + pi / 2) + 2*sin(30*pi*t);
 
 % a. Thuc hien dieu che bien do song mang fc = 1khz
-Ac = 1;     % Bien do song mang
-m = 0.5;    % He so dieu che
+Ac = 4;     % Bien do song mang
 fc = 1e3;   % Tan so song mang
 phic = 0;
 
-% Tin hieu song mang
-xc = Ac*cos(2*pi*fc*t + phic);
-
-% Chuan chua tin hieu ban tin
-x_norm = x / max(abs(x));
-
 % Dieu che
-y = (1 + m*x_norm) .* xc;
+y = ammod(x, fc, fs, phic, Ac);
 
 % b. Truyen tin hieu da dieu che qua kenh AWGN co SNR = 5 dB
-SNR_dB = 5;
-Ps = mean(y.^2);        % Cong suat tin hieu
-SNR = 10^(SNR_dB/10);   % Doi tu SNR tu dB sang lan
-Pn = Ps / SNR;          % Cong suat nhieu
-
-noise = sqrt(Pn) * randn(size(y));   % Tao nhieu Gauss
-r = y + noise;          % Tin hieu thu duoc sau kenh AWGN
+SNR = 5;
+y_noise = awgn(y, SNR, 'measured');
 
 % c. Thuc hien giai dieu che
 % Nhan voi song mang cung tan so, cung pha
-v = 2*r.*cos(2*pi*fc*t + phic);
-
-% Loc thong thap
-L = round(fs/fc);
-h = ones(1, L) / L;
-
-z = conv(v, h, 'same');
-
-% Loai bo thanh phan DC va khoi phuc tin hieu
-x_rec_norm = (z - Ac) / (Ac * m);
-
-% Neu muon dua ve bien do gan voi tin hieu ban dau
-x_rec = x_rec_norm * max(abs(x));
+x_rec = amdemod(y_noise, fc, fs, phic, Ac);
 
 % d. Ve tin hieu ban tin, tin hieu dieu che va tin hieu sau giai dieu che
 figure;
