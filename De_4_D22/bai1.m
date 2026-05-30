@@ -1,34 +1,38 @@
 clc; clear;
 
+% Cau hinh tham so 
 fs = 1000;
 ts = 1 / fs;
-t = 0:ts:2-ts;
+T_total = 2;
+t = 0:ts:T_total - ts;
+
+% Tin hieu
+x = cos(5*pi*t + pi / 2) + 10*cos(50*pi*t - pi / 2);
 
 % a. Mo phong tin hieu trong mien thoi gian
-x = cos(5*pi*t + pi/2) + 10*cos(50*pi*t - pi/2);
-
 figure;
 plot(t, x, 'LineWidth', 1.5);
 grid on;
 xlabel('Thoi gian t(s)');
 ylabel('Bien do x(t)');
 title('Mo phong tin hieu trong mien thoi gian');
+xlim([0 T_total]);
 
-% b. Bien doi fourier
+% b. Bien doi Fourier
 N = length(x);
-x_fft = fft(x);
-
-% c. Ve tin hieu trong mien tan so
-x_fft_shift = fftshift(x_fft);
-pho_bien_do = abs(x_fft_shift) / N;
-
 df = fs / N;
+
+x_fft = fft(x);
+x_fft_shift = fftshift(x_fft);
+
+pho_bien_do_2_phia = abs(x_fft_shift) / N;
 f_2_phia = -fs/2:df:fs/2 - df;
 
+% c. Ve tin hieu trong mien tan so
 figure;
-stem(f_2_phia, pho_bien_do, 'LineWidth', 1.5);
+stem(f_2_phia, pho_bien_do_2_phia, 'LineWidth', 1.5)
 grid on;
-xlabel('Tan so f (Hz)');
-ylabel('|X(f)|');
-title('Pho bien do 2 phia');
-xlim([-30 30]);
+xlabel('Tan so f(Hz)');
+ylabel('Pho bien do');
+title('Mo phong tin hieu trong mien tan so');
+xlim([-50 50]);

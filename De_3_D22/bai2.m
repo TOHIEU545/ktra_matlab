@@ -25,15 +25,16 @@ for k = 1:Nbit
 end
 
 % c. Ve dang song tin hieu trong 10 chu ki bit
-so_bit_ve = 10;
-so_mau_ve = so_bit_ve * Ns;
-t = 0:ts:ts*so_mau_ve - ts;
+N_view = 10;
+Ns_view = N_view * Ns;
+
+t = 0:ts:N_view*Tb - ts;
 
 figure;
-plot(t * 1e9, x(1:so_mau_ve), 'LineWidth', 1.5);
+plot(t * 1e6, x(1:Ns_view), 'LineWidth', 1.5);
 grid on;
-xlabel('Thoi gian t(ns)');
+xlabel('Thoi gian t(us)');
 ylabel('Bien do x(t)');
 title('Bieu do dang song tin hieu tren 10 chu ki bit');
-xlim([0 so_bit_ve*Tb*1e9]);
+xlim([0 N_view * Tb * 1e6]);
 ylim([-1.5 1.5]);

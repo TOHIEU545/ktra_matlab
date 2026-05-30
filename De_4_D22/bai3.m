@@ -1,49 +1,50 @@
 clc; clear;
 
-fs = 200000;
+% Cau hinh tham so
+fs = 100000;
 ts = 1 / fs;
-t = 0:ts:0.1-ts;
+t = 0:ts:1 - ts;
 
-x = cos(5*pi*t + pi/2) + 10*cos(50*pi*t - pi/2);
+% Tin hieu
+x = cos(5*pi*t + pi / 2) + 10*cos(50*pi*t - pi / 2);
 
-% a. Dieu che bien tin hieu
-fc = 10000;
-A = 20;
-phic = pi/4;
+% a. Dieu che
+Ac = 15;
+fc = 10e3;
+phic= pi / 4;
 
-y = ammod(x, fc, fs, phic, A);
+y = ammod(x, fc, fs, phic, Ac);
 
-% b.
+% b. Qua kenh AWGN
 Pn = 3;
-nhieu = sqrt(Pn) * randn(size(y));
-y_noise = y + nhieu;
+noise = sqrt(Pn) * randn(size(y));
+y_noise = y + noise;
 
-% c. Giai dieu che
-x_rec = amdemod(y_noise, fc, fs, phic, A);
-x_rec = movmean(x_rec, 500);
+% c. Giai dieu che tin hieu
+x_rec = amdemod(y_noise, fc, fs, phic, Ac);
 
-% d. Ve tin hieu
+% Lam muot tin hieu
+x_rec = movmean(x_rec, 1000);
+
+% d. Ve dang song tin hieu
 figure;
 subplot(3, 1, 1);
 plot(t, x, 'LineWidth', 1.5);
 grid on;
 xlabel('Thoi gian t(s)');
 ylabel('Bien do x(t)');
-title('Dang song tin hieu ban tin');
-xlim([0 0.1]);
+title('Tin hieu ban tin');
 
 subplot(3, 1, 2);
-plot(t, y_noise, 'LineWidth', 1.5);
+plot(t, y, 'LineWidth', 1.5);
 grid on;
 xlabel('Thoi gian t(s)');
 ylabel('Bien do y(t)');
-title('Tin hieu sau dieu che');
-xlim([0 0.005]);
+title('Tin hieu dieu che');
 
 subplot(3, 1, 3);
 plot(t, x_rec, 'LineWidth', 1.5);
 grid on;
 xlabel('Thoi gian t(s)');
-ylabel('Bien do x_rec');
+ylabel('Bien do x(t)');
 title('Tin hieu sau giai dieu che');
-xlim([0 0.1]);
