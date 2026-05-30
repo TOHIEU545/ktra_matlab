@@ -11,13 +11,15 @@ M = 16;
 k = log2(M);
 SNR = 5;
 
-% Chuyen chuoi bit thanh ma tran, moi hang gom 4 bit
-bit_tx_matrix = reshape(bit, k, []).';
+% Chuyen chuoi bit thanh ma tran, moi hang gom k bit
+bit_matrix_tx = reshape(bit, k, []).';
+
 % Doi nhom 4 bit sang so thap phan tu 0 den 15
-symbol_tx = bi2de(bit_tx_matrix, 'left-msb');
+symbol_tx = bi2de(bit_matrix_tx, 'left-msb');
 
 % Dieu che 16 PSK
 tx_signal = pskmod(symbol_tx, M, pi / M);
+
 % Qua kenh awgn
 rx_signal = awgn(tx_signal, SNR, 'measured');
 
@@ -42,8 +44,10 @@ title('Chom sao sau kenh AWGN');
 
 % d. Tinh so bit loi
 symbol_rx = pskdemod(rx_signal, M, pi / M);
-bit_rx_matrix = de2bi(symbol_rx, k, 'left-msb');
-bit_rx = reshape(bit_rx_matrix.', 1, []);
+
+bit_matrix_rx = de2bi(symbol_rx, k, 'left-msb');
+
+bit_rx = reshape(bit_matrix_rx.', 1, []);
 
 % Tinh so bit loi
 so_bit_loi = sum(bit ~= bit_rx);

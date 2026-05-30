@@ -1,4 +1,4 @@
-function [x, y] = euler_binedoi(f, x0, y0, h, N)
+function [x, y] = euler_biendoi(f, x0, y0, h, N)
 
 x = zeros(1, N + 1);
 y = zeros(1, N + 1);

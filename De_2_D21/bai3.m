@@ -13,11 +13,13 @@ SNR = 10;
 
 % Chuyen chuoi bit sang ma tran moi hang k bit
 bit_tx_matrix = reshape(bit, k, []).';
+
 % Doi nhom 2 bit sang so thap phan
 symbol_tx = bi2de(bit_tx_matrix, 'left-msb');
 
 % Dieu che 4 QAM
 tx_signal = qammod(symbol_tx, M, 'UnitAveragePower', true);
+
 % Qua kenh awgn
 rx_signal = awgn(tx_signal, SNR, 'measured');
 
@@ -41,7 +43,9 @@ title('Chom sao sau khi qua kenh AWGN');
 
 % d. Tinh so bit loi
 symbol_rx = qamdemod(rx_signal, M, 'UnitAveragePower', true);
+
 bit_rx_matrix = de2bi(symbol_rx, k, 'left-msb');
+
 bit_rx = reshape(bit_rx_matrix.', 1, []);
 
 % Tinh so bit loi
